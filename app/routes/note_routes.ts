@@ -1,68 +1,59 @@
 import { ObjectID, Db } from 'mongodb';
-import { Application } from 'express';
+import { Application, RequestHandler, Request, Response, NextFunction } from 'express';
+
+function errorHandlingMiddleware(innerHandler: RequestHandler): RequestHandler {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+        try {
+            return await innerHandler(req, res, next);
+        }
+        catch(err) {
+            console.error(err);
+            res.status(500);
+            res.send({ 'error': 'An error has occurred' });
+        }
+    };
+}
 
 export default function (app: Application, db: Db): void {
-    app.get('/notes/:id', (req, res): void => {
+    app.get('/notes/:id', errorHandlingMiddleware(async (req, res): Promise<void> => {
         const details = { '_id': new ObjectID(req.params.id) };
-        db.collection('notes').findOne(details, (err, item): void => {
-            if (err) {
-                res.status(500);
-                res.send({ 'error': 'An error has occurred' });                
-            } else {
-                if (item === null) {
-                    res.sendStatus(404);
-                } else {
-                    res.send(item);
-                }
-            }
-        });
-    });
 
-    app.post('/notes', (req, res): void => {
+        const item = await db.collection('notes').findOne(details);
+        if (item === null) {
+            res.sendStatus(404);
+        } else {
+            res.send(item);
+        }
+    }));
+
+    app.post('/notes', errorHandlingMiddleware(async (req, res): Promise<void> => {
         const note = { text: req.body.body, title: req.body.title };
-        db.collection('notes').insertOne(note, (err, result): void => {
-            if (err) {
-                res.status(500);
-                res.send({ 'error': 'An error has occurred' });
-            } else {
-                res.send(result.ops[0]);
-            }
-        });
-    });
+        const result = await db.collection('notes').insertOne(note);
+        res.send(result.ops[0]);
+    }));
 
-    app.delete('/notes/:id', (req, res): void => {
+    app.delete('/notes/:id', errorHandlingMiddleware(async (req, res): Promise<void> => {
         const id = req.params.id;
         const details = { '_id': new ObjectID(id) };
-        db.collection('notes').deleteOne(details, (err, result): void => {
-            if (err) {
-                res.status(500);
-                res.send({ 'error': 'An error has occurred' });
-            } else {
-                if (result.deletedCount === 0) {
-                    res.sendStatus(404);
-                }
-                else {
-                    res.send('Note ' + id + ' deleted!');
-                }
-            }
-        });
-    });
+        const {deletedCount} = await db.collection('notes').deleteOne(details);
+        if (deletedCount === 0) {
+            res.sendStatus(404);
+        }
+        else {
+            res.send('Note ' + id + ' deleted!');
+        }
+    }));
 
-    app.put('/notes/:id', (req, res): void => {
+    app.put('/notes/:id', errorHandlingMiddleware(async (req, res): Promise<void> => {
         const id = req.params.id;
         const details = { '_id': new ObjectID(id) };
         const note = { text: req.body.body, title: req.body.title };
-        db.collection('notes').updateOne(details, note, (err, result): void => {
-            if (err) {
-                res.status(500);
-                res.send({ 'error': 'An error has occurred', err });
-            } else {
-                if (result.matchedCount === 0) {
-                    res.sendStatus(404);
-                } else {
-                    res.send(note);
-                }
-            }
-        });
-    });
+        const {matchedCount} = await db.collection('notes').updateOne(details, { $set: note });
+        if (matchedCount === 0) {
+            res.sendStatus(404);
+        } else {
+            res.send(note);
+        }
+    }));
 };
