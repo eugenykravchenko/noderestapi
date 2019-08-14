@@ -12,7 +12,7 @@ import db from './config/db';
         app.use(bodyParser.urlencoded({ extended: true }));
 
         const client = await MongoClient.connect(db.url,  { useNewUrlParser: true });
-        const database = client.db('sandbox');
+        const database = client.db('notes');
 
         routes(app, database);
         app.listen(port, (): void => {
