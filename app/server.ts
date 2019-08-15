@@ -1,8 +1,8 @@
 import express from 'express';
 import { MongoClient } from 'mongodb';
 import bodyParser from 'body-parser';
-import routes from './app/routes';
-import db from './config/db';
+import routes from './routes';
+import db from '../config/db';
 
 (async function(): Promise<void> {
     try {

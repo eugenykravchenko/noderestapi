@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint --ext .ts ./",
     "compile": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./server.ts"
+    "dev": "nodemon -L --exec ts-node app/server.ts"
   },
   "author": "Eugeny Kravchenko",
   "license": "ISC",
@@ -22,7 +22,8 @@
     "@typescript-eslint/eslint-plugin": "^1.11.0",
     "@typescript-eslint/parser": "^1.11.0",
     "eslint": "^6.0.1",
-    "ts-node-dev": "^1.0.0-pre.40",
+    "nodemon": "^1.19.1",
+    "ts-node": "^8.3.0",
     "typescript": "^3.5.2"
   }
 }
