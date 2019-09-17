@@ -16,6 +16,11 @@ function errorHandlingMiddleware(innerHandler: RequestHandler): RequestHandler {
 }
 
 export default function (app: Application, db: Db): void {
+    app.get('/notes', errorHandlingMiddleware(async (req, res): Promise<void> => {
+        const items = await db.collection('notes').find().toArray();
+        res.send(items);
+    }));
+
     app.get('/notes/:id', errorHandlingMiddleware(async (req, res): Promise<void> => {
         const details = { '_id': new ObjectID(req.params.id) };
 
